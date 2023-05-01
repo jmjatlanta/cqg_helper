@@ -23,8 +23,8 @@ cqg_helper
  
 Step 2 Compile
 ```
-cqg_helper> mkdir build
-cqg_helper> cd build
-cqg_helper/build> cmake .. -DCMAKE_PREFIX_PATH=/path/to/protobuf/install/dir
-cqg_helper/build> make
+mkdir build
+cd build
+cmake .. -DCMAKE_PREFIX_PATH=/path/to/protobuf/install/dir
+make
 ```
