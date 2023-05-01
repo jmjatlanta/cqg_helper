@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25 )
 cmake_policy(VERSION 3.25)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 project ( cqg_helper_tests )
 
@@ -11,6 +11,7 @@ file(GLOB proto_common "../WebAPI/common/*.cpp")
 file(GLOB proto_WebAPI "../WebAPI/WebAPI/*.cpp")
 
 find_package(Boost 1.69 COMPONENTS log log_setup REQUIRED)
+find_package(absl REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -20,9 +21,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 add_executable( cqg_helper_tests ${test_src} ${cqg_helper} ${proto_WebAPI} ${proto_common} )
-target_include_directories(cqg_helper_tests PRIVATE )
+
+target_include_directories(cqg_helper_tests PRIVATE 
+    ../src
+    ../generated
+)
 
 target_link_libraries(cqg_helper_tests 
+    protoBinding
+    protobuf::libprotobuf
     GTest::gtest
     GTest::gtest_main
     Boost::log

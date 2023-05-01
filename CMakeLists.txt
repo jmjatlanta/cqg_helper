@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25 )
 cmake_policy(VERSION 3.25)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project ( cqg )
 
@@ -21,7 +21,6 @@ FOREACH(proto ${DATAMODEL_PROTOS})
         --proto_path=${PROTOMODEL_PATH} 
         --cpp_out=${PROTOBINDING_PATH} 
         ${proto_native}
-        COMMAND_ECHO STDERR
         RESULT_VARIABLE rv)
     IF(${rv})
         MESSAGE("Generation of data model returned ${rv} for proto ${proto_native}")
@@ -36,7 +35,6 @@ FOREACH(proto ${DATAMODEL_COMMON})
         --proto_path=${PROTOMODEL_PATH} 
         --cpp_out=${PROTOBINDING_PATH} 
         ${proto_native}
-        COMMAND_ECHO STDERR
         RESULT_VARIABLE rv)
     IF(${rv})
         MESSAGE("Generation of data model returned ${rv} for proto ${proto_native}")
