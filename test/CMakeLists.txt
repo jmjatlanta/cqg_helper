@@ -11,7 +11,6 @@ file(GLOB proto_common "../WebAPI/common/*.cpp")
 file(GLOB proto_WebAPI "../WebAPI/WebAPI/*.cpp")
 
 find_package(Boost 1.69 COMPONENTS log log_setup REQUIRED)
-find_package(absl REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -25,6 +24,7 @@ add_executable( cqg_helper_tests ${test_src} ${cqg_helper} ${proto_WebAPI} ${pro
 target_include_directories(cqg_helper_tests PRIVATE 
     ../src
     ../generated
+    ../websocketpp
 )
 
 target_link_libraries(cqg_helper_tests 
