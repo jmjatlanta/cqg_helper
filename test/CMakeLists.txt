@@ -34,5 +34,7 @@ target_link_libraries(cqg_helper_tests
     GTest::gtest_main
     Boost::log
     Boost::log_setup
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 

@@ -2,7 +2,7 @@
 /***
  * A mock server that mimics cqg WebAPI
  */
-#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio.hpp>
 #include <websocketpp/server.hpp>
 
 #include <iostream>
@@ -16,7 +16,10 @@ class mock_server
     ~mock_server();
     void run_loop();
 
+    public:
+    bool running = false;
+
     private:
-    websocketpp::server<websocketpp::config::asio> server;
+    websocketpp::server<websocketpp::config::asio_tls> server;
     std::thread listener_thread;
 };

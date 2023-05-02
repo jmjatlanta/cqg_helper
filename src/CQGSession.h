@@ -8,15 +8,10 @@ class CQGSession
 {
     public:
     CQGSession();
-    bool connect();
+    bool connect(const std::string& host_name);
     bool disconnect();
-    bool logon();
+    bool logon(const std::string& user_name, const std::string& password);
     bool logoff();
-
-    public:
-    std::string host_name;
-    std::string user_name;
-    std::string password;
 
     protected:
     WebsocketClient client;
