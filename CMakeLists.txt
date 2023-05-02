@@ -42,6 +42,7 @@ FOREACH(proto ${DATAMODEL_COMMON})
 ENDFOREACH(proto)
 
 add_subdirectory( generated )
+add_subdirectory( websocketpp )
 add_subdirectory ( src )
 add_subdirectory ( test )
 

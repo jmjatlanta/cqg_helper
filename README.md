@@ -25,6 +25,6 @@ cqg_helper
 ```
 mkdir build
 cd build
-cmake .. -DCMAKE_PREFIX_PATH=/path/to/protobuf/install/dir
+cmake ..
 make
 ```
