@@ -230,5 +230,19 @@ bool WebsocketClient::connect(const std::string& host_name)
 }
 
 bool WebsocketClient::is_connected() { return connected;}
-bool WebsocketClient::send_client_message(const google::protobuf::Message* msg) { return true; }
+bool WebsocketClient::send_client_message(const google::protobuf::Message* in) 
+{ 
+    websocketpp::error_code ec;
+    std::string data = in->to_string();
+    try {
+        client.send(hdl, data, opcode);
+    } catch (websocketpp::exception const & e) {
+        std::cout << "Echo failed because: "
+                  << "(" << e.what() << ")" << std::endl;
+    }
+    return true; 
+}
 
+int32_t WebsocketClient::receive_server_message(google::protobuf::Message** out)
+{
+}

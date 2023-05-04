@@ -16,7 +16,13 @@ class WebsocketClient
     bool connect(const std::string& host_name);
     bool is_connected();
     void run_loop();
-    bool send_client_message(const google::protobuf::Message* msg);
+    bool send_client_message(const google::protobuf::Message* in);
+    /****
+     * Retrieve message from server
+     * @param out where to place the message that was retrieved
+     * @return opcode retrieved from server
+     */
+    int32_t receive_server_message(google::protobobuf::Message** out);
 
     protected:
     websocketpp::client<websocketpp::config::asio_tls_client> client;
