@@ -1,7 +1,12 @@
 #pragma once
 
 #include <google/protobuf/message.h>
+
+#ifdef USE_SSL
 #include <websocketpp/config/asio_client.hpp>
+#else
+#endif
+
 #include <websocketpp/client.hpp>
 
 #include <iostream>
@@ -9,8 +14,9 @@
 #include <thread>
 
 typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
+typedef websocketpp::client<websocketpp::config::asio_tls_client> wsclient;
 
-class WebsocketClient : public websocketpp::client<websocketpp::config::asio_tls_client>
+class WebsocketClient : public wsclient
 {
     public:
     WebsocketClient();
@@ -36,7 +42,7 @@ class WebsocketClient : public websocketpp::client<websocketpp::config::asio_tls
     virtual void on_message_receive(message_ptr in) = 0;
 
     protected:
-    websocketpp::client<websocketpp::config::asio_tls_client>::connection_ptr con;
+    wsclient::connection_ptr con;
     bool connected = false;
     std::thread listener_thread;
 };

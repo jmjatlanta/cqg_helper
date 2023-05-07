@@ -42,6 +42,8 @@ FOREACH(proto ${DATAMODEL_COMMON})
     ENDIF()
 ENDFOREACH(proto)
 
+add_compile_definitions(USE_SSL)
+
 add_subdirectory( generated )
 add_subdirectory( websocketpp )
 add_subdirectory ( src )

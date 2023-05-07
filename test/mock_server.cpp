@@ -3,28 +3,30 @@
 
 #include <iostream>
 
-typedef websocketpp::server<websocketpp::config::asio_tls> server;
-
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 // pull out the type of messages sent by our config
-typedef server::message_ptr message_ptr;
+typedef wsserver::message_ptr message_ptr;
 typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 
-void on_login(server* s, websocketpp::connection_hdl hdl, const WebAPI_2::ClientMsg& msg)
+void on_login(wsserver* s, websocketpp::connection_hdl hdl, const WebAPI_2::ClientMsg& msg)
 {
     std::cout << "mock_server::on_login returning ServerMsg\n";
     websocketpp::lib::error_code ec;
     WebAPI_2::ServerMsg out;
+    // TODO: Make a logon response and send
+    user_session_2::LogonResult* lr = out.mutable_logon_result();
+    lr->set_result_code(user_session_2::LogonResult_ResultCode_RESULT_CODE_SUCCESS);
+    lr->set_base_time("2023-01-01T12:00:00");
     std::string str;
     out.SerializeToString(&str);
-    s->send(hdl, str, websocketpp::frame::opcode::text, ec);
+    s->send(hdl, str, websocketpp::frame::opcode::binary, ec);
 }
 
 // Define a callback to handle incoming messages
-void on_message(server* s, websocketpp::connection_hdl hdl, server::message_ptr msg) {
+void on_message(wsserver* s, websocketpp::connection_hdl hdl, wsserver::message_ptr msg) {
     std::cout << "mock_server::on_message called with message of " 
                 << msg->get_payload().size() << " bytes\n";
 
@@ -41,8 +43,8 @@ void on_message(server* s, websocketpp::connection_hdl hdl, server::message_ptr 
     }
 }
 // called when http connection arrives
-void on_http(server* s, websocketpp::connection_hdl hdl) {
-    server::connection_ptr con = s->get_con_from_hdl(hdl);
+void on_http(wsserver* s, websocketpp::connection_hdl hdl) {
+    wsserver::connection_ptr con = s->get_con_from_hdl(hdl);
     
     con->set_body("Hello World!");
     con->set_status(websocketpp::http::status_code::ok);

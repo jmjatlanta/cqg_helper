@@ -7,7 +7,6 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 // pull out the type of messages sent by our config
-typedef websocketpp::client<websocketpp::config::asio_tls_client> wsclient;
 typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 
 /******
@@ -166,7 +165,7 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
     return ctx;
 }
 
-WebsocketClient::WebsocketClient() : websocketpp::client<websocketpp::config::asio_tls_client>() {}
+WebsocketClient::WebsocketClient() : wsclient() {}
 
 WebsocketClient::~WebsocketClient() 
 {
@@ -218,7 +217,7 @@ bool WebsocketClient::connect(const std::string& host_name)
 
         // Note that connect here only requests a connection. No network messages are
         // exchanged until the event loop starts running in the next line.
-        websocketpp::client<websocketpp::config::asio_tls_client>::connect(con);
+        wsclient::connect(con);
         connected = true;
 
         // Start the ASIO io_service run loop
@@ -237,7 +236,11 @@ bool WebsocketClient::send_client_message(const std::string& in)
     std::cout << "WebsocketClient::send_client_message: Sending " << in.size() << " bytes.\n";
     websocketpp::lib::error_code ec;
     try {
-        send(con->get_handle(), in, websocketpp::frame::opcode::text, ec);
+        send(con->get_handle(), in, websocketpp::frame::opcode::binary, ec);
+        if (ec)
+        {
+            std::cout << "WebsocketClient::send_client_message error code " << ec.message() << std::endl;
+        }
     } catch (websocketpp::exception const & e) {
         std::cout << "WebsocketClient::send_client_message failed because: "
                   << "(" << e.what() << ")" << std::endl;
