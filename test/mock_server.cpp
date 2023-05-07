@@ -1,4 +1,5 @@
 #include "mock_server.h"
+#include "WebAPI/webapi_2.pb.h"
 
 #include <iostream>
 
@@ -12,23 +13,30 @@ using websocketpp::lib::bind;
 typedef server::message_ptr message_ptr;
 typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 
-// Define a callback to handle incoming messages
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
-    std::cout << "on_message called with hdl: " << hdl.lock().get()
-              << " and message: " << msg->get_payload()
-              << std::endl;
+void on_login(server* s, websocketpp::connection_hdl hdl, const WebAPI_2::ClientMsg& msg)
+{
+    std::cout << "mock_server::on_login returning ServerMsg\n";
+    websocketpp::lib::error_code ec;
+    WebAPI_2::ServerMsg out;
+    std::string str;
+    out.SerializeToString(&str);
+    s->send(hdl, str, websocketpp::frame::opcode::text, ec);
+}
 
-    // check for a special command to instruct the server to stop listening so
-    // it can be cleanly exited.
-    if (msg->get_payload() == "stop-listening") {
-        s->stop_listening();
-        return;
-    }
+// Define a callback to handle incoming messages
+void on_message(server* s, websocketpp::connection_hdl hdl, server::message_ptr msg) {
+    std::cout << "mock_server::on_message called with message of " 
+                << msg->get_payload().size() << " bytes\n";
 
     try {
-        s->send(hdl, msg->get_payload(), msg->get_opcode());
+        WebAPI_2::ClientMsg clientMessage;
+        if (clientMessage.ParseFromString(msg->get_payload())
+                && clientMessage.has_logon())
+            on_login(s, hdl, clientMessage);
+        else
+            std::cout << "mock_server::on_message: is not a logon message\n";
     } catch (websocketpp::exception const & e) {
-        std::cout << "Echo failed because: "
+        std::cout << "mock_server::on_message failed because: "
                   << "(" << e.what() << ")" << std::endl;
     }
 }
@@ -38,9 +46,11 @@ void on_http(server* s, websocketpp::connection_hdl hdl) {
     
     con->set_body("Hello World!");
     con->set_status(websocketpp::http::status_code::ok);
+    std::cout << "mock_server::on_http called\n";
 }
 
 std::string get_password() {
+    std::cout << "mock_server::get_password called\n";
     return "test";
 }
 // See https://wiki.mozilla.org/Security/Server_Side_TLS for more details about
@@ -51,6 +61,7 @@ enum tls_mode {
 };
 // called when negotiating SSL
 context_ptr on_tls_init(tls_mode mode, websocketpp::connection_hdl hdl) {
+    std::cout << "mock_server::on_tls_init called\n";
     namespace asio = websocketpp::lib::asio;
 
     std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
@@ -96,15 +107,18 @@ context_ptr on_tls_init(tls_mode mode, websocketpp::connection_hdl hdl) {
     } catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << std::endl;
     }
+    std::cout << "mock_server::on_tls_init completed\n";
     return ctx;
 }
 
 void mock_server::run_loop()
 {
+    std::cout << "In mock_server::run_loop\n";
     try { 
         running = true;
         // Start the ASIO io_service run loop
         server.run();
+        std::cout << "mock_server::run_loop unblocked\n";
     } catch (websocketpp::exception const& e) {
         std::cout << "run_loop failed because: "
             << "(" << e.what() << ")" << std::endl;
@@ -145,6 +159,7 @@ mock_server::mock_server(int32_t port)
 
 mock_server::~mock_server()
 {
+    std::cout << "mock_server dtor called\n";
     // stop listener thread
     server.stop_listening();
     listener_thread.join();

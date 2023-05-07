@@ -5,6 +5,11 @@
 #include <thread>
 #include <chrono>
 
+class mock_client : public WebsocketClient
+{
+    virtual void on_message_receive(message_ptr in) {}
+};
+
 TEST(mock_server_tests, ctor)
 {
     try {
@@ -12,7 +17,7 @@ TEST(mock_server_tests, ctor)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         EXPECT_TRUE(server.running);
 
-        WebsocketClient client;
+        mock_client client;
         std::cout << "client constructed\n";
         bool result = client.connect("wss://localhost:1235");
         std::cout << "client connected\n";

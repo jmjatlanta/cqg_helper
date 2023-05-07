@@ -7,7 +7,6 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 // pull out the type of messages sent by our config
-typedef websocketpp::config::asio_client::message_type::ptr message_ptr;
 typedef websocketpp::client<websocketpp::config::asio_tls_client> wsclient;
 typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> context_ptr;
 
@@ -15,10 +14,13 @@ typedef websocketpp::lib::shared_ptr<websocketpp::lib::asio::ssl::context> conte
  * This message handler will be invoked once for each incoming message. It
  *  prints the message and then sends a copy of the message back to the server.
  */
-void on_message(wsclient* c, websocketpp::connection_hdl hdl, message_ptr msg) {
-    std::cout << "on_message called with hdl: " << hdl.lock().get()
+void on_message(wsclient* c, websocketpp::connection_hdl hdl, wsclient::message_ptr msg) {
+    std::cout << "Client on_message called with hdl: " << hdl.lock().get()
               << " and message: " << msg->get_payload()
               << std::endl;
+
+    WebsocketClient& client = static_cast<WebsocketClient&>(*c);
+    client.on_message_receive(msg);
 }
 
 /// Verify that one of the subject alternative names matches the given hostname
@@ -164,7 +166,7 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
     return ctx;
 }
 
-WebsocketClient::WebsocketClient() {}
+WebsocketClient::WebsocketClient() : websocketpp::client<websocketpp::config::asio_tls_client>() {}
 
 WebsocketClient::~WebsocketClient() 
 {
@@ -173,7 +175,7 @@ WebsocketClient::~WebsocketClient()
         websocketpp::lib::error_code ec;
         std::string reason = "Client closing connection";
         websocketpp::close::status::value code = websocketpp::close::status::going_away;
-        client.close(con->get_handle(), code, reason, ec);
+        close(con->get_handle(), code, reason, ec);
         listener_thread.join();
     } catch (websocketpp::exception const & e) {
         std::cout << "client dtor: " << e.what() << std::endl;
@@ -185,7 +187,7 @@ void WebsocketClient::run_loop()
 {
     try
     {
-        client.run();
+        run();
     } catch (websocketpp::exception const & e) {
         std::cout << "client websocket exception: " << e.what() << std::endl;
     } catch (...) {
@@ -197,32 +199,32 @@ bool WebsocketClient::connect(const std::string& host_name)
 { 
     try {
         // Set logging to be pretty verbose (everything except message payloads)
-        client.set_access_channels(websocketpp::log::alevel::all);
-        client.clear_access_channels(websocketpp::log::alevel::frame_payload);
-        client.set_error_channels(websocketpp::log::elevel::all);
+        set_access_channels(websocketpp::log::alevel::all);
+        clear_access_channels(websocketpp::log::alevel::frame_payload);
+        set_error_channels(websocketpp::log::elevel::all);
 
         // Initialize ASIO
-        client.init_asio();
+        init_asio();
 
         // Register our message handler
-        client.set_message_handler(bind(&on_message,&client,::_1,::_2));
-        client.set_tls_init_handler(bind(&on_tls_init,host_name.c_str(), ::_1));
+        set_message_handler(bind(&on_message,this,::_1,::_2));
+        set_tls_init_handler(bind(&on_tls_init,host_name.c_str(), ::_1));
 
         websocketpp::lib::error_code ec;
-        con = client.get_connection(host_name, ec);
+        con = get_connection(host_name, ec);
         if (ec) {
             std::cout << "client: could not create connection because: " << ec.message() << std::endl;
         }
 
         // Note that connect here only requests a connection. No network messages are
         // exchanged until the event loop starts running in the next line.
-        client.connect(con);
+        websocketpp::client<websocketpp::config::asio_tls_client>::connect(con);
         connected = true;
 
         // Start the ASIO io_service run loop
         // this will cause a single connection to be made to the server. c.run()
         // will exit when this connection is closed.
-        listener_thread = std::thread(&WebsocketClient::run_loop, this); // c.run();
+        listener_thread = std::thread(&WebsocketClient::run_loop, this);
     } catch (websocketpp::exception const & e) {
         std::cout << "client::connect():  " << e.what() << std::endl;
     }
@@ -230,19 +232,15 @@ bool WebsocketClient::connect(const std::string& host_name)
 }
 
 bool WebsocketClient::is_connected() { return connected;}
-bool WebsocketClient::send_client_message(const google::protobuf::Message* in) 
+bool WebsocketClient::send_client_message(const std::string& in) 
 { 
-    websocketpp::error_code ec;
-    std::string data = in->to_string();
+    std::cout << "WebsocketClient::send_client_message: Sending " << in.size() << " bytes.\n";
+    websocketpp::lib::error_code ec;
     try {
-        client.send(hdl, data, opcode);
+        send(con->get_handle(), in, websocketpp::frame::opcode::text, ec);
     } catch (websocketpp::exception const & e) {
-        std::cout << "Echo failed because: "
+        std::cout << "WebsocketClient::send_client_message failed because: "
                   << "(" << e.what() << ")" << std::endl;
     }
     return true; 
-}
-
-int32_t WebsocketClient::receive_server_message(google::protobuf::Message** out)
-{
 }
