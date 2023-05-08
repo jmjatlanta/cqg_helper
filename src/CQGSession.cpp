@@ -1,5 +1,4 @@
 #include "CQGSession.h"
-#include "WebAPI/webapi_2.pb.h"
 #include "WebAPI/account_authorization_2.pb.h"
 
 #include <exception>
@@ -13,8 +12,15 @@ bool CQGSession::connect(const std::string& host_name)
     return WebsocketClient::connect(host_name);
 };
 
-void CQGSession::on_logon_response(const WebAPI_2::ServerMsg& in)
+/****
+ * We received a logon_result
+ * @param in the incoming message
+ */
+void CQGSession::on_logon_result(const WebAPI_2::ServerMsg& in)
 {
+    const user_session_2::LogonResult logon_result = in.logon_result();
+    if ( logon_result.result_code() == user_session_2::LogonResult_ResultCode_RESULT_CODE_SUCCESS)
+        is_logged_in_ = true;
 }
 
 void CQGSession::on_message_receive(message_ptr in)
@@ -23,9 +29,9 @@ void CQGSession::on_message_receive(message_ptr in)
     // determine the type
     WebAPI_2::ServerMsg serverMsg;
     serverMsg.ParseFromString(in->get_payload());
-    if (serverMsg.has_logon_response())
+    if (serverMsg.has_logon_result())
     {
-        process_logon_response(serverMsg);
+        on_logon_result(serverMsg);
     }
 }
 

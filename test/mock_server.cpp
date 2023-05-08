@@ -20,6 +20,9 @@ void on_login(wsserver* s, websocketpp::connection_hdl hdl, const WebAPI_2::Clie
     user_session_2::LogonResult* lr = out.mutable_logon_result();
     lr->set_result_code(user_session_2::LogonResult_ResultCode_RESULT_CODE_SUCCESS);
     lr->set_base_time("2023-01-01T12:00:00");
+    lr->set_server_time(1);
+    lr->set_protocol_version_minor(1);
+    lr->set_protocol_version_major(1);
     std::string str;
     out.SerializeToString(&str);
     s->send(hdl, str, websocketpp::frame::opcode::binary, ec);
