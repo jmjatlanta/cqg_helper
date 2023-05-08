@@ -17,5 +17,6 @@ class CQGSession : public WebsocketClient
 
     protected:
     virtual void on_message_receive(message_ptr in);
+    virtual void on_logon_response(const WebAPI_2::ServerMsg& in);
     bool is_logged_in_ = false;
 };
