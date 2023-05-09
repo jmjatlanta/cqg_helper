@@ -42,6 +42,8 @@ bool CQGSession::logon(int32_t account_id, const std::string& user_name, const s
     logon->set_user_name(user_name);
     logon->set_password(password);
     logon->set_client_version("1");
+    logon->set_protocol_version_major(WebAPI_2::PROTOCOL_VERSION_MAJOR);
+    logon->set_protocol_version_minor(WebAPI_2::PROTOCOL_VERSION_MINOR);
     std::string msg;
     clientMsg.SerializeToString(&msg);
     send_client_message(msg);
